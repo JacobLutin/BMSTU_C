@@ -3,73 +3,66 @@
 #include "functions.h"
 
 /**************************************************************************
-	Считывание значений из файл
+	Считывание значений из файла
 **************************************************************************/
 
-int read_array_from_file(FILE *file, float array[], int *n)
+int read_array_from_file(FILE *file, float array[], int *n, int *warning)
 {
 	int error_code;
 	int i;
+	int scanf_code;
+	float c_buf;
+
+	error_code = 0;
 
 	// Проверка существования самого файла
 	if (file == NULL)
 	{
-		return FILE_DOESNT_EXIST;
+		error_code = FILE_DOESNT_EXIST;
 	}
-
-	i = 0;
-
-	// Считывание значений и проверка на переполнение
-	while (((error_code = fscanf(file, "%f", &array[i])) == 1))
+	else
 	{
-		if (array[i] > FLT_MAX || array[i] < FLT_MIN)
-		{
-			return DATA_OVERFLOW;
-		}
+		i = 0;
 
-		i++;	
+		// Считывание значений и проверка на переполнение
+		while (((scanf_code = fscanf(file, "%f", &c_buf)) == 1) && (i < N_MAX))
+			array[i++] = c_buf;
+			
+		// Проверка на переполнение массива
+		if ((scanf_code != EOF) && (i == N_MAX-1))
+			*warning = 1;
+
+		// Проверка отсутствия данных в файле и корректности типа данных
+		if ((scanf_code == EOF) && (i == 0))
+			error_code = EMPTY_FILE;
+		else if ((scanf_code != EOF) && (scanf_code != 1))
+			error_code = BAD_DATA;
+		else
+			*n = i;
 	}
 
-	// Проверка на переполнение массива
-	if (i > N_MAX)
-		return ARRAY_OVERFLOW;
-
-	// Проверка отсутствия данных в файле
-	if ((error_code == EOF) && (i == 0))
-		return EMPTY_FILE;
-
-	// Проверка наличия хотя бы двух значений
-	if ((error_code == EOF) && (i < 2))
-		return NOT_ENOUGH_DATA;
-
-	// Проверка корректности типа данных
-	if ((error_code != EOF) && (error_code != 1))
-		return BAD_DATA;
-
-	*n = i;
-
-	fclose(file);
-
-	return 0;
+	return error_code;
 }
 
 /**************************************************************************
 	Нахождение среднего арифметического значения в массиве
 **************************************************************************/
 
-float array_average(const float array[], int n)
+int array_average(const float array[], int n, float *result)
 {
 	if (n < 1)
 	{
-		return 0;	
+		return BAD_AVERAGE;
 	}
 
 	float sum = 0;
 
 	for (int i = 0; i < n; i++)
-		sum += array[i]; 
+		sum += array[i];
+
+	*result = sum / n;
 	
-	return sum / n;
+	return 0;
 }
 
 /**************************************************************************
@@ -99,6 +92,41 @@ void create_array(const float array[], float new_array[], int n, float average)
 			new_array[k++] = array[i];
 }
 
+/**************************************************************************
+	Создание нового массива из значений превышающих среднее арифметическое
+**************************************************************************/
+
+int create_above_average_array(const float array[], float new_array[], int n, float average, int *count)
+{
+	int error_code;
+	int k;
+
+	error_code = 1;
+
+	if (n < 1)
+	{
+		error_code = BAD_ARRAY;
+	}
+	else
+	{
+		k = 0;
+		for (int i = 0; i < n; i++)
+			if (array[i] > average)
+				new_array[k++] = array[i];
+
+		if (k < 1)
+			error_code = 0;
+		else
+			*count = k;
+	}
+
+	return error_code;
+}
+
+/**************************************************************************
+	Вывод массива в файл
+**************************************************************************/
+
 int print_array_to_file(FILE *file, const float array[], int n)
 {
 	// Проверка существования самого файла
@@ -109,8 +137,6 @@ int print_array_to_file(FILE *file, const float array[], int n)
 
 	for (int i = 0; i < n; i++)
 		fprintf(file, "%.5f ", array[i]);
-
-	fclose(file);
 
 	return 0;
 }
@@ -123,6 +149,8 @@ void log_error(int error_code)
 {
 	switch(error_code)
 	{
+		case NO_FILE_NAME:
+			break;
 		case FILE_DOESNT_EXIST:
 			fprintf(stderr, "I/O error. File doesn't exist.\n");
 			break;
@@ -138,8 +166,8 @@ void log_error(int error_code)
 		case ARRAY_OVERFLOW:
 			fprintf(stderr, "I/O error. Too many values.\n");
 			break;
-		case DATA_OVERFLOW:
-			fprintf(stderr, "I/O error. Value is overflowed.\n");
+		case BAD_AVERAGE:
+			fprintf(stderr, "I/O error. Average value in undefined.\n");
 			break;
 		default:
 			fprintf(stderr, "Undefined error.");
