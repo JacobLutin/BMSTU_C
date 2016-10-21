@@ -3,6 +3,10 @@
 #include "errors.h"
 #include "functions.h"
 
+/**************************************************************************
+	Вывод ошибки
+**************************************************************************/
+
 void log_error(int error_code)
 {
 	switch(error_code)
@@ -18,23 +22,27 @@ void log_error(int error_code)
 			fprintf(stderr, "I/O error. Empty file.\n");
 			break;
 		case BAD_DATA:
-			fprintf(stderr, "I/O error. Wrong data.\n");
-			break;
-		case NOT_ENOUGH_DATA:
-			fprintf(stderr, "I/O error. Not enough data.\n");
+			fprintf(stderr, "I/O error. Bad data.\n");
 			break;
 		case ARRAY_OVERFLOW:
 			fprintf(stderr, "I/O error. Too many values.\n");
 			break;
-		case BAD_AVERAGE:
-			fprintf(stderr, "I/O error. Average value in undefined.\n");
+		case EMPTY_ARRAY:
+			fprintf(stderr, "I/O error. Array is empty.\n");
+			break;
+		case NOT_ENOUGH_DATA:
+			fprintf(stderr, "I/O error. NOT_ENOUGH_DATA.\n");
 			break;
 		default:
 			fprintf(stderr, "Undefined error.");
 	}
 }
 
-int count_array_elements(FILE *file, int *count, int *warning)
+/**************************************************************************
+	Считывание количества элементов массива из файла
+**************************************************************************/
+
+int count_array_elements(FILE *file, int *count)
 {
 	int c_buf;
 	int scanf_code;
@@ -46,12 +54,8 @@ int count_array_elements(FILE *file, int *count, int *warning)
 	if (file != NULL)
 	{
 		i  = 0;
-		while ((scanf_code = fscanf(file, "%d", &c_buf)) == 1 && i < N_MAX)
+		while ((scanf_code = fscanf(file, "%d", &c_buf)) == 1)
 			i++;
-			
-		// Проверка на переполнение массива
-		if ((scanf_code != EOF) && (i == N_MAX-1))
-			*warning = 1;
 
 		// Проверка отсутствия данных в файле и корректности типа данных
 		if ((scanf_code == EOF) && (i == 0))
@@ -67,7 +71,11 @@ int count_array_elements(FILE *file, int *count, int *warning)
 	return error_code;
 }
 
-int read_array_from_file(FILE *file, int *array_p, int n, int *warning)
+/**************************************************************************
+	Считывание значений из файла
+**************************************************************************/
+
+int read_array_from_file(FILE *file, int *array_p, int n)
 {
 	int error_code;
 	int i;
@@ -89,18 +97,17 @@ int read_array_from_file(FILE *file, int *array_p, int n, int *warning)
 		while ((scanf_code = fscanf(file, "%f", &c_buf)) == 1 && i < n)
 			*(array_p + i++) = c_buf;
 
-		for (i = 0; i < n; i++)
-			fprintf(stdout, "%d ", *(array_p + i));
-
-		printf("\n");
+		// for (i = 0; i < n; i++)
+		// 	fprintf(stdout, "%d ", *(array_p + i));
+		// printf("\n");
 			
 		// Проверка на переполнение массива
 		if ((scanf_code != EOF) && (i == n-1))
-			*warning = 1;
-
-		// Проверка отсутствия данных в файле и корректности типа данных
-		if ((scanf_code == EOF) && (i == 0))
+			error_code = ARRAY_OVERFLOW;
+		// Проверка отсутствия данных в файле
+		else if ((scanf_code == EOF) && (i == 0))
 			error_code = EMPTY_FILE;
+		// Проверка корректности типа данных
 		else if ((scanf_code != EOF) && (scanf_code != 1))
 			error_code = BAD_DATA;
 	}
@@ -108,28 +115,49 @@ int read_array_from_file(FILE *file, int *array_p, int n, int *warning)
 	return error_code;
 }
 
+/**************************************************************************
+	Вычисление значения требуемого задачей
+**************************************************************************/
+
 int calculate_value(int *array_p, int *array_p_last, int *max)
 {
 	int error_code;
 	int i;
-	int sum;
 
 	error_code = 0;
-	i = 0;
-
 	*max = 0;
 
-	// 
+	i = 0;
 
-	// while (atoi(&array_p) < ((atoi(&array_p) + atoi(&array_p_last)) / 2))
-	// {
-	// 	fprintf(stdout, "%d %d\n", *array_p, *array_p_last);
-	// 	sum = *(array_p++) + *(array_p_last--);
-	// 	fprintf(sum, "%s\n", );
-	// 	if (sum > max)
-	// 		*max = sum;
-		
-	// }
+	while (1)
+	{
+		array_p_last--;
+
+		if (array_p >= array_p_last)
+		{
+			break;
+		}
+
+		if (*array_p + *array_p_last > *max)
+		{
+			*max = *array_p + *array_p_last;
+		}
+		else if (*array_p + *array_p > *max)
+
+		array_p++;
+
+		i++;
+	}
+
+	if (i == 0)
+	{
+		error_code = EMPTY_ARRAY;
+
+		if (array_p_last == array_p)
+		{
+			error_code = NOT_ENOUGH_DATA;
+		}
+	}
 
 	return error_code;
 }

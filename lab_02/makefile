@@ -1,10 +1,13 @@
-CFLAGS = -std=c99 
-# -Wall -Werror -pedantic
+CFLAGS = -std=c99 -Wall -Werror -pedantic
 CLFLAGS = main test *.o *.gch 
 OBJ = main
 
 ifeq ($(mode), test)
 	OBJ = test
+endif
+
+ifeq ($(mode), drmemory)
+	CFLAGS += -m32 -ggdb
 endif
 
 ifeq ($(mode), debug)

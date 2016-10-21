@@ -5,19 +5,16 @@
 
 int main(int argc, char *argv[])
 {
+	FILE *file;
 	int *array_p;
 	int *array_p_end;
-
 	int error_code;
-	FILE *file;
-
-	int i;
 	int count;
-	int warning;
+	int max_value;
 
 	error_code = 0;
 
-	if (argc < 2)
+	if (argc < REQUIRED_ARGC)
 	{
 		printf("USAGE: ./main <input_file>\n");
 		error_code = NO_FILE_NAME;
@@ -32,40 +29,37 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			warning = 0;
-
-			if ((error_code = count_array_elements(file, &count, &warning)) == 0)
+			if ((error_code = count_array_elements(file, &count)) == 0)
 			{
-				fprintf(stdout, "%d\n", count);
-
 				array_p = malloc(sizeof(int) * count);
 
 				rewind(file);
 
-				if ((error_code = read_array_from_file(file, array_p, count, &warning)) == 0)
+				if ((error_code = read_array_from_file(file, array_p, count)) == 0)
 				{
-					fprintf(stdout, "Success!\n");
-					// for (i = 0; i < count; i++)
-					// {
-						
-					// 	fprintf(stdout, "%d ", *(array_p));
-					// 	fprintf(stdout, "%d ", (array_p));
-					// 	array_p++;
-					// }
-
 					array_p_end = (array_p + count);
 
+					if ((error_code = calculate_value(array_p, array_p_end, &max_value)) == 0)
+					{
+						fprintf(stdout, "Success!\n");
+					}
 				}
 
 				free(array_p);
 			}
 
 			fclose(file);
-		}
-		
+		}	
 	}
 
-	log_error(error_code);
+	if (error_code != 0)
+	{
+		log_error(error_code);
+	}
+	else
+	{
+		fprintf(stdout, "Maximum value = %d\n", max_value);
+	}
 
 	return error_code;
 }

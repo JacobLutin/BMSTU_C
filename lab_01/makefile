@@ -6,6 +6,10 @@ ifeq ($(mode), test)
 	OBJ = test
 endif
 
+ifeq ($(mode), drmemory)
+	CFLAGS += -m32 -ggdb
+endif
+
 ifeq ($(mode), debug)
 	CFLAGS += -g3 -DNDEBUG
 endif

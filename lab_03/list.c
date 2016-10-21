@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "list.h"
+#include "errors.h"
+#include "functions.h"
 
 /**************************************************************************
 	print_list function
@@ -39,14 +41,19 @@ Node_t *Node_init(int num)
 	Node_push function
 **************************************************************************/
 
-void Node_push(Node_t **head, int num)
+int Node_push(Node_t **head, int num)
 {
 	Node_t *new_node = malloc(sizeof(Node_t));
+
+	if (new_node == NULL)
+		return OUT_OF_MEMORY
 
 	new_node->val = num;
 	new_node->next = *head;
 
 	*head = new_node;
+
+	return 0;
 }
 
 /**************************************************************************
@@ -87,6 +94,8 @@ int Node_remove_last(Node_t **head, int *num)
 	Node_t *current = *head;
 	*num = (current)->val;
 
+
+
 	if (current->next == NULL)
 	{
 		free(*head);
@@ -95,11 +104,26 @@ int Node_remove_last(Node_t **head, int *num)
 		return 1;
 	}
 
+	printf("-\n");
+
 	while (current->next != NULL)
 	{
 		prev = current;
 		current = current->next;
 		*num = current->val;
+
+		printf("%d\n", prev->val);
+		printf("%d\n", current->val);
+		printf("%d\n", current->next->val);
+		printf("-\n");
+	}
+
+	prev = next->val;
+
+	if (prev->val) 
+	{
+		current = current->next;
+		*num = 
 	}
 
 	free(prev->next);
