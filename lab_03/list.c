@@ -44,9 +44,12 @@ Node_t *Node_init(int num)
 int Node_push(Node_t **head, int num)
 {
 	Node_t *new_node = malloc(sizeof(Node_t));
+	
+	if (*head == NULL)
+		return NULL_LIST;
 
 	if (new_node == NULL)
-		return OUT_OF_MEMORY
+		return OUT_OF_MEMORY;
 
 	new_node->val = num;
 	new_node->next = *head;
@@ -62,12 +65,10 @@ int Node_push(Node_t **head, int num)
 
 int Node_pop(Node_t **head, int *num)
 {
-	Node_t *next_node;
-
 	if (*head == NULL)
-	{
-		return 0;
-	}
+		return NULL_LIST;
+
+	Node_t *next_node;
 
 	*num = (*head)->val;
 	next_node = (*head)->next;
@@ -76,7 +77,7 @@ int Node_pop(Node_t **head, int *num)
 
 	*head = next_node;
 
-	return 1;
+	return 0;
 }
 
 /**************************************************************************
@@ -118,12 +119,12 @@ int Node_remove_last(Node_t **head, int *num)
 		printf("-\n");
 	}
 
-	prev = next->val;
+	// prev = current->next->val;
 
 	if (prev->val) 
 	{
 		current = current->next;
-		*num = 
+		// *num = 
 	}
 
 	free(prev->next);
